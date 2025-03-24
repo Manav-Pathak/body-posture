@@ -1,0 +1,15 @@
+# Ignore virtual environment
+venv/
+
+# Ignore compiled Python files
+__pycache__/
+
+# Ignore uploads contents
+uploads/*
+
+# Ignore processed contents
+processed/*
+
+# Optional: Ignore OS-specific or editor-specific files
+.DS_Store
+*.swp
