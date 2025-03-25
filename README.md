@@ -26,6 +26,7 @@
    ```sh
    python app.py  
    ```
+   OR Just run the **app.py** file
 
 2. **Access the Web App:**  
    Open a browser and go to:  
