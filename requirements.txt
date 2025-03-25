@@ -1,0 +1,10 @@
+Flask
+opencv-python
+mediapipe
+numpy
+pandas
+scikit-learn
+scipy
+librosa
+matplotlib
+Werkzeug
