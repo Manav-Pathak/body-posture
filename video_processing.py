@@ -5,7 +5,7 @@ import pandas as pd
 import joblib
 
 # Load your pretrained model
-model = joblib.load('model/body_language_handa.pkl')
+model = joblib.load('models/body_language_hands.pkl')
 
 mp_drawing = mp.solutions.drawing_utils
 mp_holistic = mp.solutions.holistic
