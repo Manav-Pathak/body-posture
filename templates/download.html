@@ -1,55 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Download Processed Video</title>
-  <style>
-    body {
-      background-color: #f0f8ff;
-      font-family: 'Helvetica', sans-serif;
-      margin: 0;
-      padding: 0;
-      color: #333;
-    }
-    .header {
-      background-color: #ffffff;
-      padding: 20px;
-      text-align: center;
-      border-bottom: 1px solid #ddd;
-    }
-    .container {
-      max-width: 600px;
-      margin: 50px auto;
-      padding: 30px;
-      background-color: #ffffff;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      text-align: center;
-    }
-    .btn {
-      padding: 12px 24px;
-      font-size: 16px;
-      color: #fff;
-      background-color: #008cba;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: background-color 0.3s ease;
-    }
-    .btn:hover {
-      background-color: #007bb5;
-    }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>Processing Complete!</h1>
-  </div>
-  <div class="container">
-    <p>Your processed video is ready for download.</p>
-    <a href="{{ url_for('download', filename=filename) }}" class="btn">Download Video</a>
-  </div>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Download Processed Video</title>
+    <style>
+      body {
+        background-color: #f0f8ff;
+        font-family: "Helvetica", sans-serif;
+        margin: 0;
+        padding: 0;
+        color: #333;
+      }
+      .header {
+        background-color: #ffffff;
+        padding: 20px;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+      }
+      .container {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 30px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+      .btn {
+        padding: 12px 24px;
+        font-size: 16px;
+        color: #fff;
+        background-color: #008cba;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background-color 0.3s ease;
+      }
+      .btn:hover {
+        background-color: #007bb5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>Processing Complete!</h1>
+    </div>
+    <div class="container">
+      <p>Your processed video is ready for download.</p>
+      <a href="{{ url_for('download', filename=filename) }}" class="btn"
+        >Download Video</a
+      >
+
+      {% if audio_analysis %} {% if audio_analysis.error %}
+      <div class="analysis">
+        <h2>Audio Analysis Results</h2>
+        <p><strong>Audio Analysis Error:</strong> {{ audio_analysis.error }}</p>
+      </div>
+      {% else %}
+      <div class="analysis">
+        <h2>Audio Analysis Results</h2>
+        <p>
+          <strong>Number of Long Pauses:</strong> {{
+          audio_analysis.num_long_pauses }}
+        </p>
+        <p>
+          <strong>Total Silence Duration:</strong> {{
+          audio_analysis.total_silence_s }} sec
+        </p>
+        
+        <p><strong>Speech Speed:</strong> {{ audio_analysis.speech_speed }}</p>
+        <a href="/audio-results" class="btn secondary-btn"
+          >View Detailed Audio Analysis</a
+        >
+      </div>
+      {% endif %} {% else %}
+      <p>No audio analysis results available.</p>
+      {% endif %}
+    </div>
+  </body>
 </html>

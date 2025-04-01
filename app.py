@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 import os
-from video_processing import process_video  # Import the processing function
+from video_processing import process_video  # Import the video processing function
+from audio.audio_analysis import extract_audio, analyze_audio  # Import audio extraction & analysis functions
 
 app = Flask(__name__)
 
@@ -16,12 +17,13 @@ os.makedirs(app.config['PROCESSED_FOLDER'], exist_ok=True)
 def home():
     return render_template('home.html')
 
-@app.route('/speech-analysis')
-def speech_analysis():
-    return "<h2 style='text-align:center; padding:40px;'>Speech Analysis Coming Soon!</h2>"
+@app.route('/live-analysis')
+def live_analysis():
+    # Placeholder
+    return "<h2 style='text-align:center; padding:40px;'>Live Analysis (Coming Soon)</h2>"
 
-@app.route('/facial-expression', methods=['GET'])
-def facial_expression():
+@app.route('/video-upload', methods=['GET'])
+def video_upload():
     return render_template('upload.html')
 
 @app.route('/process', methods=['POST'])
@@ -36,17 +38,28 @@ def process():
     upload_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
     file.save(upload_path)
 
-    # Define processed file name and path
+    # Define processed file name and path for the video
     processed_filename = "processed_" + file.filename
     processed_path = os.path.join(app.config['PROCESSED_FOLDER'], processed_filename)
 
-    # Call the video processing function
+    # Process video (drawing landmarks & classification)
     try:
         process_video(upload_path, processed_path)
     except Exception as e:
         return f"Error processing video: {str(e)}", 500
 
-    return render_template('download.html', filename=processed_filename)
+    audio_filename = "extracted_" + file.filename.rsplit('.', 1)[0] + ".mp3"
+    audio_path = os.path.join(app.config['UPLOAD_FOLDER'], audio_filename)
+    
+    try:
+        # Extract 
+        extract_audio(upload_path, audio_path)
+        # Analyze 
+        audio_analysis_result = analyze_audio(audio_path)
+    except Exception as e:
+        audio_analysis_result = {"error": str(e)}
+
+    return render_template('download.html', filename=processed_filename, audio_analysis=audio_analysis_result)
 
 @app.route('/download/<filename>')
 def download(filename):

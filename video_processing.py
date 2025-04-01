@@ -109,7 +109,6 @@ def process_video(input_path, output_path):
                 else:
                     left_hand_row = [0] * (21 * 3)
 
-                # Concatenate all landmark data
                 row = pose_row + face_row + right_hand_row + left_hand_row
 
                 # Create DataFrame with same columns used in training
@@ -119,7 +118,7 @@ def process_video(input_path, output_path):
                 body_language_class = model.predict(X)[0]
                 body_language_prob  = model.predict_proba(X)[0]
 
-                # 2.1. Get a coordinate (like left ear) for text placement
+                #  text placement
                 if results.pose_landmarks:
                     left_ear = results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_EAR]
                     coords = (int(left_ear.x * width), int(left_ear.y * height))
