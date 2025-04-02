@@ -19,6 +19,12 @@
    ```sh
    pip install -r requirements.txt  
    ```
+   Extra step for moviepy:
+   ```sh
+   pip uninstall moviepy
+   pip install moviepy==1.0.3
+   ```
+   
 
 ## Running the Application  
 
