@@ -7,8 +7,16 @@ uploads/*
 
 processed/*
 
+*.mp4
+*.mp3
+*.wav
+
+git rm --cached "*.mp4"
+
 .DS_Store
 *.swp
+
+tempCodeRunnerFile.py
 
 test.py
 sample/

@@ -14,7 +14,7 @@ def analyze_audio(audio_path):
     Analyzes the audio file for long pauses and determines speech speed.
     Returns a dict with:
       - num_long_pauses: number of pauses longer than min_silence_len
-      - total_silence_ms: total silence duration in ms
+      - total_silence_s: total silence duration in ms
       - silence_ratio: fraction of audio that is silence
       - speech_speed: categorized as 'Too Slow', 'Proper', or 'Too Fast'
     """
@@ -45,7 +45,7 @@ def analyze_audio(audio_path):
 
     return {
         "num_long_pauses": num_long_pauses,
-        "total_silence (in s)": total_silence / 1000,
+        "total_silence_s": total_silence / 1000,
         #"silence_ratio": silence_ratio,
         "speech_speed": speech_speed
     }
@@ -53,8 +53,8 @@ def analyze_audio(audio_path):
 # ---------------------------------------------------------------------------
 # Testing snippet (for direct audio testing without video input)
 # Uncomment these lines to test audio analysis independently.
-#
-# if __name__ == "__main__":
-#     test_audio_path = "../uploads/extracted_wtsp_fast.mp3"
-#     result = analyze_audio(test_audio_path)
-#     print("Test Audio Analysis Result:", result)
+
+if __name__ == "__main__":
+    test_audio_path = "uploads/extracted_wtsp_fast.mp3"
+    result = analyze_audio(test_audio_path)
+    print("Test Audio Analysis Result:", result)

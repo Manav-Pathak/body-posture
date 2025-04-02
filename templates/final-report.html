@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Final Report</title>
+  <style>
+    body {
+      background-color: #dcc6c6;
+      font-family: Arial, sans-serif;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #dfda9f;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .report-section {
+      margin: 20px 0;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      margin: 10px;
+      background: #008cba;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: background 0.3s ease;
+    }
+    .btn:hover {
+      background: #0079a1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Final Report</h1>
+    
+    <div class="report-section">
+      <h2>Posture Analysis</h2>
+      <p><strong>Counts:</strong> {{ data.posture.counts }}</p>
+      <p><strong>Total Frames Counted:</strong> {{ data.posture.total_frames_counted }}</p>
+      <p><strong>Final Posture:</strong> {{ data.posture.final_posture }}</p>
+    </div>
+    
+    <div class="report-section">
+      <h2>Audio Analysis</h2>
+      {% if data.audio.error %}
+        <p><strong>Error:</strong> {{ data.audio.error }}</p>
+      {% else %}
+        <p><strong>Number of Long Pauses:</strong> {{ data.audio.num_long_pauses }}</p>
+        <p><strong>Total Silence Duration:</strong> {{ data.audio.total_silence_s }} ms</p>
+        <p><strong>Speech Speed:</strong> {{ data.audio.speech_speed }}</p>
+      {% endif %}
+    </div>
+    
+    <div style="text-align: center;">
+      <a href="/" class="btn">Back to Home</a>
+    </div>
+  </div>
+</body>
+</html>

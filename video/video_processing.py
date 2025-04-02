@@ -4,14 +4,20 @@ import numpy as np
 import pandas as pd
 import joblib
 
-# Load your pretrained model
 model = joblib.load('models/body_language_hands.pkl')
 
 mp_drawing = mp.solutions.drawing_utils
 mp_holistic = mp.solutions.holistic
 
 def process_video(input_path, output_path):
-    """Process the video to overlay landmarks AND classification results."""
+    """
+    Process the video to overlay landmarks and classification results,
+    and accumulate posture predictions for final report.
+    Returns a dictionary with posture report details.
+    """
+    # Initialize posture counts (only count if probability > 0.65)
+    posture_counts = {"closed": 0, "fear": 0, "confident": 0}
+    
     cap = cv2.VideoCapture(input_path)
     if not cap.isOpened():
         raise ValueError("Error opening video file: " + input_path)
@@ -32,40 +38,34 @@ def process_video(input_path, output_path):
             if not ret:
                 break
 
-            # Convert frame to RGB (for MediaPipe) and disable writing
+            # Convert frame to RGB and process
             image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             image.flags.writeable = False
             results = holistic.process(image)
-
-            # Re-enable writing and convert back to BGR
             image.flags.writeable = True
             image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
             # ---------------------------
             # 1. Draw Landmarks
             # ---------------------------
-            # Face
             if results.face_landmarks:
                 mp_drawing.draw_landmarks(
                     image, results.face_landmarks, mp_holistic.FACEMESH_CONTOURS,
                     mp_drawing.DrawingSpec(color=(80,110,10), thickness=1, circle_radius=1),
                     mp_drawing.DrawingSpec(color=(80,256,121), thickness=1, circle_radius=1)
                 )
-            # Right Hand
             if results.right_hand_landmarks:
                 mp_drawing.draw_landmarks(
                     image, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS,
                     mp_drawing.DrawingSpec(color=(80,22,10), thickness=2, circle_radius=4),
                     mp_drawing.DrawingSpec(color=(80,44,121), thickness=2, circle_radius=2)
                 )
-            # Left Hand
             if results.left_hand_landmarks:
                 mp_drawing.draw_landmarks(
                     image, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS,
                     mp_drawing.DrawingSpec(color=(121,22,76), thickness=2, circle_radius=4),
                     mp_drawing.DrawingSpec(color=(121,44,250), thickness=2, circle_radius=2)
                 )
-            # Pose
             if results.pose_landmarks:
                 mp_drawing.draw_landmarks(
                     image, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS,
@@ -74,58 +74,54 @@ def process_video(input_path, output_path):
                 )
 
             # ---------------------------
-            # 2. Classification (try/except in case of any missing data)
-            # ---------------------------
+            # 2. Classification & Aggregation
+            
             try:
-                # -- Pose Landmarks (33 x 4 = 132) --
                 if results.pose_landmarks:
                     pose_row = list(np.array(
                         [[lm.x, lm.y, lm.z, lm.visibility] for lm in results.pose_landmarks.landmark]
                     ).flatten())
                 else:
                     pose_row = [0] * (33 * 4)
-
-                # -- Face Landmarks (468 x 4 = 1872) --
+                    
                 if results.face_landmarks:
                     face_row = list(np.array(
                         [[lm.x, lm.y, lm.z, lm.visibility] for lm in results.face_landmarks.landmark]
                     ).flatten())
                 else:
                     face_row = [0] * (468 * 4)
-
-                # -- Right Hand Landmarks (21 x 3 = 63) --
+                    
                 if results.right_hand_landmarks:
                     right_hand_row = list(np.array(
                         [[lm.x, lm.y, lm.z] for lm in results.right_hand_landmarks.landmark]
                     ).flatten())
                 else:
                     right_hand_row = [0] * (21 * 3)
-
-                # -- Left Hand Landmarks (21 x 3 = 63) --
+                    
                 if results.left_hand_landmarks:
                     left_hand_row = list(np.array(
                         [[lm.x, lm.y, lm.z] for lm in results.left_hand_landmarks.landmark]
                     ).flatten())
                 else:
                     left_hand_row = [0] * (21 * 3)
-
+                
                 row = pose_row + face_row + right_hand_row + left_hand_row
-
-                # Create DataFrame with same columns used in training
                 X = pd.DataFrame([row], columns=model.feature_names_in_)
-
-                # Predict Class & Probability
                 body_language_class = model.predict(X)[0]
                 body_language_prob  = model.predict_proba(X)[0]
 
-                #  text placement
+                # Count the class only if probability > 0.65
+                if body_language_prob[np.argmax(body_language_prob)] > 0.65:
+                    if body_language_class in posture_counts:
+                        posture_counts[body_language_class] += 1
+
+                # Text placement near left ear
                 if results.pose_landmarks:
                     left_ear = results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_EAR]
                     coords = (int(left_ear.x * width), int(left_ear.y * height))
                 else:
-                    coords = (50, 50)  # Default if no pose
+                    coords = (50, 50)
 
-                # 2.2. Draw rectangle & text for classification near left ear
                 cv2.rectangle(
                     image,
                     (coords[0], coords[1] + 5),
@@ -137,17 +133,11 @@ def process_video(input_path, output_path):
                     image, body_language_class, coords,
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA
                 )
-
-                # 2.3. Draw status box (top-left corner)
                 cv2.rectangle(image, (0,0), (250,60), (245,117,16), -1)
-
-                # Display Class
                 cv2.putText(image, 'CLASS', (95,12),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 1, cv2.LINE_AA)
                 cv2.putText(image, body_language_class.split(' ')[0], (90,40),
                             cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
-
-                # Display Probability
                 cv2.putText(image, 'PROB', (15,12),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 1, cv2.LINE_AA)
                 cv2.putText(
@@ -157,7 +147,6 @@ def process_video(input_path, output_path):
                 )
 
             except Exception as e:
-                # If any error (e.g., mismatch in columns), skip classification on this frame
                 print("Classification Error:", e)
 
             # ---------------------------
@@ -167,3 +156,44 @@ def process_video(input_path, output_path):
 
     cap.release()
     out.release()
+
+    # ---------------------------
+    # 4. Compute Final Posture Report
+    # ---------------------------
+    total_count = sum(posture_counts.values())
+    if total_count == 0:
+        final_posture = "reasonable posture"
+    else:
+        # Find the class with maximum count
+        max_class = max(posture_counts, key=posture_counts.get)
+        # Check for tie: if more than one class has the same count as max, default to reasonable
+        max_val = posture_counts[max_class]
+        ties = [cls for cls, cnt in posture_counts.items() if cnt == max_val]
+        if len(ties) > 1:
+            final_posture = "reasonable posture"
+        else:
+            if max_class == "closed":
+                final_posture = "Defensive/Nervous posture"
+            elif max_class == "fear":
+                final_posture = "Nervous; needs to be calmer"
+            elif max_class == "confident":
+                final_posture = "Confident posture"
+            else:
+                final_posture = "reasonable posture"
+
+    posture_report = {
+        "counts": posture_counts,
+        "final_posture": final_posture,
+        "total_frames_counted": total_count
+    }
+    
+    return posture_report
+
+# ---------------------------------------------------------------------------
+# Uncomment the following block to test video_processing independently.
+#
+# if __name__ == "__main__":
+#     input_vid = "WIN_20250305_23_57_28_Pro.mp4"
+#     output_vid = "processed_WIN_20250305_23_57_28_Pro (1).mp4"
+#     report = process_video(input_vid, output_vid)
+#     print("Posture Report:", report)
