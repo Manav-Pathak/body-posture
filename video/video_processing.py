@@ -3,8 +3,14 @@ import mediapipe as mp
 import numpy as np
 import pandas as pd
 import joblib
+import pickle
 
-model = joblib.load('models/body_language_hands.pkl')
+
+#with open('../models/uploaded_dataset.pkl', 'rb') as f:    ----->ALONE
+#   model = pickle.load(f)
+
+with open('models/uploaded_dataset.pkl', 'rb') as f:
+    model = pickle.load(f)
 
 mp_drawing = mp.solutions.drawing_utils
 mp_holistic = mp.solutions.holistic
@@ -15,14 +21,13 @@ def process_video(input_path, output_path):
     and accumulate posture predictions for final report.
     Returns a dictionary with posture report details.
     """
-    # Initialize posture counts (only count if probability > 0.65)
+    
     posture_counts = {"closed": 0, "fear": 0, "confident": 0}
     
     cap = cv2.VideoCapture(input_path)
     if not cap.isOpened():
         raise ValueError("Error opening video file: " + input_path)
 
-    # Video properties
     width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps    = cap.get(cv2.CAP_PROP_FPS)
@@ -38,7 +43,7 @@ def process_video(input_path, output_path):
             if not ret:
                 break
 
-            # Convert frame to RGB and process
+
             image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             image.flags.writeable = False
             results = holistic.process(image)
@@ -47,7 +52,7 @@ def process_video(input_path, output_path):
 
             # ---------------------------
             # 1. Draw Landmarks
-            # ---------------------------
+       
             if results.face_landmarks:
                 mp_drawing.draw_landmarks(
                     image, results.face_landmarks, mp_holistic.FACEMESH_CONTOURS,
@@ -106,16 +111,19 @@ def process_video(input_path, output_path):
                     left_hand_row = [0] * (21 * 3)
                 
                 row = pose_row + face_row + right_hand_row + left_hand_row
-                X = pd.DataFrame([row], columns=model.feature_names_in_)
+
+                X = pd.DataFrame([row], columns=model.feature_names_in_)  #--------------*********----
+                #X = pd.DataFrame([row])
+                
                 body_language_class = model.predict(X)[0]
                 body_language_prob  = model.predict_proba(X)[0]
 
-                # Count the class only if probability > 0.65
-                if body_language_prob[np.argmax(body_language_prob)] > 0.65:
+             
+                if body_language_prob[np.argmax(body_language_prob)] > 0.60:
                     if body_language_class in posture_counts:
                         posture_counts[body_language_class] += 1
 
-                # Text placement near left ear
+                # Text placement 
                 if results.pose_landmarks:
                     left_ear = results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_EAR]
                     coords = (int(left_ear.x * width), int(left_ear.y * height))
@@ -164,25 +172,25 @@ def process_video(input_path, output_path):
     if total_count == 0:
         final_posture = "reasonable posture"
     else:
-        # Find the class with maximum count
+       
         max_class = max(posture_counts, key=posture_counts.get)
-        # Check for tie: if more than one class has the same count as max, default to reasonable
+        
         max_val = posture_counts[max_class]
         ties = [cls for cls, cnt in posture_counts.items() if cnt == max_val]
         if len(ties) > 1:
             final_posture = "reasonable posture"
         else:
             if max_class == "closed":
-                final_posture = "Defensive/Nervous posture"
+                final_posture = "Defensive/Nervous posture. Try maintaining eye contact and open body language."
             elif max_class == "fear":
-                final_posture = "Nervous; needs to be calmer"
+                final_posture = "Nervous; needs to be calmer. This may indicate stress or anxiety"
             elif max_class == "confident":
-                final_posture = "Confident posture"
+                final_posture = "Confident posture. Can improve eye contact more"
             else:
                 final_posture = "reasonable posture"
 
     posture_report = {
-        "counts": posture_counts,
+        #"counts": posture_counts,
         "final_posture": final_posture,
         "total_frames_counted": total_count
     }
@@ -193,7 +201,7 @@ def process_video(input_path, output_path):
 # Uncomment the following block to test video_processing independently.
 #
 # if __name__ == "__main__":
-#     input_vid = "WIN_20250305_23_57_28_Pro.mp4"
-#     output_vid = "processed_WIN_20250305_23_57_28_Pro (1).mp4"
+#     input_vid = "closed_test1.mp4"
+#     output_vid = "processed_closed_test1.mp4"
 #     report = process_video(input_vid, output_vid)
 #     print("Posture Report:", report)

@@ -61,19 +61,11 @@
       {% else %}
       <div class="analysis">
         <h2>Audio Analysis Results</h2>
-        <p>
-          <strong>Number of Long Pauses:</strong> {{
-          audio_analysis.num_long_pauses }}
-        </p>
-        <p>
-          <strong>Total Silence Duration:</strong> {{
-          audio_analysis.total_silence_s }} sec
-        </p>
-        
+        <p> <strong>Number of Long Pauses:</strong> {{audio_analysis.num_long_pauses }} </p>
+        <p> <strong>Total Silence Duration:</strong> {{audio_analysis.total_silence_s }} sec </p>
         <p><strong>Speech Speed:</strong> {{ audio_analysis.speech_speed }}</p>
-        <a href="/audio-results" class="btn secondary-btn"
-          >View Detailed Audio Analysis</a
-        >
+        <a href="/final_report" class="btn secondary-btn"
+          >View Detailed Audio Analysis</a>
       </div>
       {% endif %} {% else %}
       <p>No audio analysis results available.</p>

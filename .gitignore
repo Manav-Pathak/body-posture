@@ -6,6 +6,8 @@ __pycache__/
 uploads/*
 
 processed/*
+Backup/*
+*.csv
 
 *.mp4
 *.mp3

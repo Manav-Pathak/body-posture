@@ -36,13 +36,15 @@ def process():
     if file.filename == '':
         return "No file selected", 400
 
-    # Save the uploaded video file
+    # # Save the uploaded video file
     upload_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
     file.save(upload_path)
 
-    # Define processed file name and path for video
+    # # Define processed file name and path for video
     processed_filename = "processed_" + file.filename
     processed_path = os.path.join(app.config['PROCESSED_FOLDER'], processed_filename)
+
+    #------------------TOTAL-----------------
 
     # Process video and get posture report
     try:
@@ -50,9 +52,9 @@ def process():
     except Exception as e:
         return f"Error processing video: {str(e)}", 500
 
-    # -----------------------------------------------
-    # Audio Extraction and Analysis
-    # -----------------------------------------------
+    #-----------------------------------------------
+    #Audio Extraction and Analysis
+    
     audio_filename = "extracted_" + file.filename.rsplit('.', 1)[0] + ".mp3"
     audio_path = os.path.join(app.config['UPLOAD_FOLDER'], audio_filename)
     
@@ -61,6 +63,20 @@ def process():
         audio_analysis_result = analyze_audio(audio_path)
     except Exception as e:
         audio_analysis_result = {"error": str(e)}
+
+    #------------------TOTAL-----------------
+
+    #------------------ONLY AUDIO-----------------
+    # audio_path = "uploads/extracted_wtsp_fast.mp3" 
+    
+    # try:
+    #     audio_analysis_result = analyze_audio(audio_path)
+    # except Exception as e:
+    #     audio_analysis_result = {"error": str(e)}
+    
+    # posture_report = {"counts": {}, "final_posture": "N/A", "total_frames_counted": 0}  #placeholder
+
+    #------------------ONLY AUDIO-----------------
 
     # Store final report data globally (for /final-report route)
     global final_report_data
@@ -76,7 +92,7 @@ def process():
 def download(filename):
     return send_from_directory(app.config['PROCESSED_FOLDER'], filename, as_attachment=True)
 
-@app.route('/final-report')
+@app.route('/final_report')
 def final_report():
     global final_report_data
     return render_template('final_report.html', data=final_report_data)

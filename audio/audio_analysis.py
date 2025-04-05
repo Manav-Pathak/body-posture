@@ -2,9 +2,7 @@ from moviepy.editor import VideoFileClip
 from pydub import AudioSegment, silence
 
 def extract_audio(video_path, audio_path):
-    """
-    Extracts audio from the given video file and writes it to audio_path.
-    """
+    
     clip = VideoFileClip(video_path)
     clip.audio.write_audiofile(audio_path, codec='mp3')
     clip.close()
@@ -18,7 +16,7 @@ def analyze_audio(audio_path):
       - silence_ratio: fraction of audio that is silence
       - speech_speed: categorized as 'Too Slow', 'Proper', or 'Too Fast'
     """
-    # Load audio using pydub
+    
     audio = AudioSegment.from_file(audio_path)
     
     # Parameters: detect pauses longer than 1500ms; threshold is relative to average loudness
@@ -54,7 +52,7 @@ def analyze_audio(audio_path):
 # Testing snippet (for direct audio testing without video input)
 # Uncomment these lines to test audio analysis independently.
 
-if __name__ == "__main__":
-    test_audio_path = "uploads/extracted_wtsp_fast.mp3"
-    result = analyze_audio(test_audio_path)
-    print("Test Audio Analysis Result:", result)
+# if __name__ == "__main__":
+#     test_audio_path = "uploads/extracted_wtsp_fast.mp3"
+#     result = analyze_audio(test_audio_path)
+#     print("Test Audio Analysis Result:", result)
